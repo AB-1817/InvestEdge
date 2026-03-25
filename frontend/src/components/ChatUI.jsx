@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
-// ── Groq config — get free key at console.groq.com ────────────────────────────
-const GROQ_KEY = "gsk_your_groq_api_key_here"; // Get free key at console.groq.com
+// ── Groq config — loaded from environment variable (never hardcode keys) ───────
+const GROQ_KEY = import.meta.env.VITE_GROQ_KEY;
 const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile"; // best for tool use
 const BACKEND = "http://localhost:8000";
