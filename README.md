@@ -152,5 +152,3 @@ cd frontend && npm run build
 ```
 
 ---
-
-*Built with ❤️ by Team Maharudra for ET AI Hackathon 2026 — PS6: AI for the Indian Investor*
