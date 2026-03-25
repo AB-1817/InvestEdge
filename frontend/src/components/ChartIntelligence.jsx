@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-const BACKEND = "http://localhost:8000";
+const BACKEND = import.meta.env.VITE_API_URL;
 
 function StockChart({ data, symbol, signals }) {
   const ref = useRef(null);

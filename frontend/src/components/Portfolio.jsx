@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const BACKEND = "http://localhost:8000";
+const BACKEND = import.meta.env.VITE_API_URL;
 
 const SAMPLE = `RELIANCE 50 2800
 HDFCBANK 30 1650

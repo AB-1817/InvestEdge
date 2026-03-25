@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 const GROQ_KEY = import.meta.env.VITE_GROQ_KEY;
 const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile"; // best for tool use
-const BACKEND = "http://localhost:8000";
+const BACKEND = import.meta.env.VITE_API_URL;
 
 // ── Tools (OpenAI / Groq function-calling format) ─────────────────────────────
 const TOOLS = [

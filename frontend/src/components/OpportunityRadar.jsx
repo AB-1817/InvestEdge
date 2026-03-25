@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const BACKEND = "http://localhost:8000";
+const BACKEND = import.meta.env.VITE_API_URL;
 
 const CAT_COLORS = {
   valuation: "#f59e0b",
