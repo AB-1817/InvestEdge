@@ -12,7 +12,9 @@ import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_KEYS = [os.getenv("GROQ_API_KEY"), os.getenv("GROQ_API_KEY_2")]
+GROQ_KEYS = [k for k in GROQ_KEYS if k]  # Filter out None values
+current_key_index = 0
 
 # ─── Pure numpy/pandas technical indicators (no pandas-ta needed) ─────────────
 
@@ -607,24 +609,34 @@ app.include_router(video_router)
 # ─── Shared AI helpers (used by innovation endpoints below) ───────────────────
 
 async def _groq_chat(prompt: str, system: str = "You are a financial analyst AI.") -> str:
-    if not GROQ_API_KEY:
+    global current_key_index
+    if not GROQ_KEYS:
         return "AI unavailable — GROQ_API_KEY not set."
-    try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            resp = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
-                json={
-                    "model": "llama-3.3-70b-versatile",
-                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
-                    "max_tokens": 400, "temperature": 0.4,
-                },
-            )
-            if resp.status_code != 200:
+    
+    for attempt in range(len(GROQ_KEYS)):
+        try:
+            key = GROQ_KEYS[current_key_index]
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                    json={
+                        "model": "llama-3.3-70b-versatile",
+                        "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+                        "max_tokens": 400, "temperature": 0.4,
+                    },
+                )
+                if resp.status_code == 200:
+                    return resp.json()["choices"][0]["message"]["content"].strip()
+                else:
+                    print(f"Groq key {current_key_index + 1} failed with status {resp.status_code}")
+                    current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
+        except Exception as e:
+            print(f"Groq key {current_key_index + 1} failed: {e}")
+            current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
+            if attempt == len(GROQ_KEYS) - 1:
                 return ""
-            return resp.json()["choices"][0]["message"]["content"].strip()
-    except Exception:
-        return ""
+    return ""
 
 def _fetch_news_titles(symbols: List[str], max_per: int = 6) -> List[dict]:
     articles = []
@@ -1049,13 +1061,83 @@ async def synthesize_news(req: SynthesisReq):
 @app.get("/api/news/stream")
 async def intelligence_stream():
     """Live market intelligence stream powered by real news + Groq AI."""
-    symbols = ["RELIANCE.NS", "HDFCBANK.NS", "INFY.NS", "TCS.NS"]
-    articles = await asyncio.get_event_loop().run_in_executor(
-        None, lambda: _fetch_news_titles(symbols, max_per=3)
-    )
-    headlines_text = "\n".join(f"- {a['title']}" for a in articles[:8]) or "Markets trading normally."
+    # Try to fetch fresh news from multiple sources
+    symbols = ["RELIANCE.NS", "HDFCBANK.NS", "INFY.NS", "TCS.NS", "SBIN.NS", 
+               "ICICIBANK.NS", "BAJFINANCE.NS", "TATAMOTORS.NS", "WIPRO.NS", "LT.NS"]
+    
+    articles = []
+    seen = set()
+    current_date = datetime.now()
+    
+    # Fetch from more symbols to increase chances of fresh news
+    for sym in symbols:
+        try:
+            t = yf.Ticker(sym)
+            raw_news = t.news or []
+            
+            for n in raw_news[:2]:  # Top 2 from each symbol
+                content = n.get("content") or {}
+                title = content.get("title") or n.get("title", "")
+                publisher = (content.get("provider") or {}).get("displayName", "") or n.get("publisher", "")
+                
+                # Try to get timestamp
+                pub_timestamp = None
+                pub_date = content.get("pubDate", "")
+                if pub_date:
+                    try:
+                        # Parse ISO format
+                        from dateutil import parser
+                        pub_timestamp = parser.parse(pub_date)
+                    except:
+                        pass
+                
+                if not pub_timestamp:
+                    ts = n.get("providerPublishTime")
+                    if ts:
+                        try:
+                            pub_timestamp = datetime.fromtimestamp(ts)
+                        except:
+                            pass
+                
+                # Calculate age in hours
+                age_hours = 999
+                time_str = "Recent"
+                if pub_timestamp:
+                    age = current_date - pub_timestamp
+                    age_hours = age.total_seconds() / 3600
+                    
+                    # Format based on age
+                    if age_hours < 1:
+                        time_str = f"{int(age.total_seconds() / 60)} min ago"
+                    elif age_hours < 24:
+                        time_str = f"{int(age_hours)} hours ago"
+                    elif age_hours < 48:
+                        time_str = "Yesterday"
+                    else:
+                        time_str = pub_timestamp.strftime("%d %b")
+                
+                if title and title not in seen:
+                    seen.add(title)
+                    articles.append({
+                        "title": title, 
+                        "publisher": publisher, 
+                        "time": time_str,
+                        "age_hours": age_hours
+                    })
+        except Exception as e:
+            continue
+    
+    # Sort by freshness (lowest age_hours first)
+    articles = sorted(articles, key=lambda x: x.get("age_hours", 999))
+    
+    # Take freshest articles
+    fresh_articles = [a for a in articles if a.get("age_hours", 999) < 48]  # Less than 2 days old
+    if not fresh_articles:
+        fresh_articles = articles[:8]  # Fallback to any articles
+    
+    headlines_text = "\n".join(f"- {a['title']}" for a in fresh_articles[:8]) or "Markets trading normally."
 
-    # Fetch Nifty for sentiment score base
+    # Fetch Nifty for sentiment score
     nifty_change = 0.0
     try:
         nifty = yf.Ticker("^NSEI")
@@ -1067,24 +1149,32 @@ async def intelligence_stream():
 
     sentiment_score = min(100, max(0, int(50 + nifty_change * 5)))
 
+    # Add freshness context to AI
+    freshness_note = ""
+    if fresh_articles and fresh_articles[0].get("age_hours", 999) < 24:
+        freshness_note = "(Latest news from today) "
+    
     prompt = (
-        f"Based on these latest market headlines:\n{headlines_text}\n\n"
-        "Write a 2-3 sentence market intelligence stream update. Describe the current market mood, "
-        "key drivers, and what sectors/themes are in focus. Be concise and professional."
+        f"{freshness_note}Based on these market headlines:\n{headlines_text}\n\n"
+        f"Current time: {datetime.now().strftime('%d %b %Y, %H:%M')} IST\n"
+        f"Nifty 50: {'+' if nifty_change >= 0 else ''}{nifty_change:.2f}%\n\n"
+        "Write a 2-3 sentence market intelligence update. Focus on current market mood, "
+        "key drivers, and actionable insights. Be concise and professional."
     )
     stream_text = await _groq_chat(prompt)
     if not stream_text:
         direction = "up" if nifty_change >= 0 else "down"
         stream_text = (
-            f"Indian markets are trading {direction} today with Nifty 50 "
+            f"Indian markets are trading {direction} with Nifty 50 "
             f"{'+' if nifty_change >= 0 else ''}{nifty_change:.2f}%. "
-            f"Sentiment score stands at {sentiment_score}/100. "
-            f"Monitor key sectors for intraday opportunities."
+            f"Sentiment score: {sentiment_score}/100. "
+            f"Monitor key sectors for opportunities."
         )
 
     return {
         "text": stream_text,
         "sentiment_score": sentiment_score,
+        "latest_headlines": fresh_articles[:5],
         "generated_at": datetime.now().isoformat(),
     }
 
@@ -1164,6 +1254,8 @@ async def news_rag(
 
     def parse_news_item(n: dict, sym_display: str) -> Optional[dict]:
         """Handle both old flat format and new nested content format."""
+        current_year = datetime.now().year
+        
         # ── New format: n = {"content": {"title": ..., "pubDate": ..., ...}}
         content = n.get("content") or {}
         if content:
@@ -1173,17 +1265,29 @@ async def news_rag(
                         (content.get("clickThroughUrl") or {}).get("url", "")
             pub_date  = content.get("pubDate", "")
             # pubDate is ISO format e.g. "2024-03-24T10:30:00Z"
-            t_str = pub_date[:10] if pub_date else ""
+            # Validate year to avoid corrupted dates
+            t_str = "Recent"
+            if pub_date:
+                try:
+                    year = int(pub_date[:4])
+                    if 2020 <= year <= current_year:
+                        t_str = pub_date[:10]  # Just the date part
+                except:
+                    pass
         else:
             # ── Old flat format
             title     = n.get("title", "")
             publisher = n.get("publisher", "")
             link      = n.get("link", "")
             ts        = n.get("providerPublishTime")
-            try:
-                t_str = datetime.fromtimestamp(ts).strftime("%d %b %Y") if ts else ""
-            except Exception:
-                t_str = ""
+            t_str = "Recent"
+            if ts:
+                try:
+                    dt = datetime.fromtimestamp(ts)
+                    if 2020 <= dt.year <= current_year:
+                        t_str = dt.strftime("%d %b %Y")
+                except Exception:
+                    pass
 
         if not title:
             return None
