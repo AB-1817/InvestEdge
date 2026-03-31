@@ -202,6 +202,3 @@ Open `http://localhost:5173`
 
 ---
 
-## License
-
-MIT
