@@ -111,6 +111,21 @@ app.include_router(backtest_router)
 app.include_router(chat_router)
 app.include_router(track_record_router)
 
+# ─── Health & Root Endpoints ──────────────────────────────────────────────────
+
+@app.get("/")
+async def root():
+    return {
+        "status": "ok",
+        "app": "InvestEdge Financial Intelligence API",
+        "version": "2.0.0"
+    }
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def nse(symbol: str) -> str:
@@ -987,6 +1002,13 @@ async def earnings_predictor(symbol: str):
         raise
     except Exception as e:
         raise HTTPException(500, f"Earnings predictor error: {str(e)}")
+
+@app.get("/api/earnings/event-study/{symbol}")
+async def earnings_event_study_endpoint(symbol: str):
+    """Returns point-in-time historical earnings event study data for a given symbol."""
+    ticker = nse(symbol)
+    return get_earnings_event_study(ticker)
+
 
 # ─── 7. Live Market Indices (Nifty 50, Sensex, Bank Nifty) ───────────────────
 
