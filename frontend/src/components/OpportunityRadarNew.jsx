@@ -249,7 +249,7 @@ export default function OpportunityRadarNew() {
     <div style={{ height: "100%", overflowY: "auto", background: c("--bg-base"), fontFamily: "Inter, sans-serif" }}>
 
       {/* Summary Cards */}
-      <div style={{ padding: "28px 32px 0" }}>
+      <div data-onboarding="radar" style={{ padding: "28px 32px 0" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0, background: c("--bg-elevated"), borderRadius: 20, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.12)" }}>
 
           <div style={{ padding: "24px 28px", borderRight: `1px solid ${c("--border")}` }}>

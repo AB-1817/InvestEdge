@@ -204,7 +204,7 @@ export default function BacktestEngine() {
       </div>
 
       {/* Controls Panel */}
-      <div style={{ background: c("--bg-elevated"), borderRadius: 16, border: `1px solid ${c("--border")}`, padding: 24, marginBottom: 28 }}>
+      <div data-onboarding="backtester" style={{ background: c("--bg-elevated"), borderRadius: 16, border: `1px solid ${c("--border")}`, padding: 24, marginBottom: 28 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 2fr 1fr 1fr", gap: 16, marginBottom: 16 }}>
           {/* Symbol Input */}
           <div>

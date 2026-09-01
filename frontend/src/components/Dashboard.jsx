@@ -160,7 +160,7 @@ export default function Dashboard({ onNav }) {
 
       <div style={{ padding: "28px 40px" }}>
         {/* Live Stats Row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
+        <div data-onboarding="dashboard" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
           <StatCard label="Nifty 50" value={nifty ? nifty.price.toLocaleString("en-IN") : "—"} sub={nifty ? `${nifty.change_pct >= 0 ? "+" : ""}${nifty.change_pct}% today` : "Fetching..."} subColor={nifty ? (nifty.change_pct >= 0 ? "#16a34a" : "#ef4444") : undefined} change={nifty ? `${Math.abs(nifty.change_pct)}%` : null} changeUp={nifty?.change_pct >= 0} />
           <StatCard label="Sensex" value={sensex ? sensex.price.toLocaleString("en-IN") : "—"} sub={sensex ? `${sensex.change_pct >= 0 ? "+" : ""}${sensex.change_pct}% today` : "Fetching..."} subColor={sensex ? (sensex.change_pct >= 0 ? "#16a34a" : "#ef4444") : undefined} change={sensex ? `${Math.abs(sensex.change_pct)}%` : null} changeUp={sensex?.change_pct >= 0} />
           <StatCard label="Bank Nifty" value={banknifty ? banknifty.price.toLocaleString("en-IN") : "—"} sub={banknifty ? `${banknifty.change_pct >= 0 ? "+" : ""}${banknifty.change_pct}% today` : "Fetching..."} subColor={banknifty ? (banknifty.change_pct >= 0 ? "#16a34a" : "#ef4444") : undefined} change={banknifty ? `${Math.abs(banknifty.change_pct)}%` : null} changeUp={banknifty?.change_pct >= 0} />
@@ -174,7 +174,7 @@ export default function Dashboard({ onNav }) {
         </div>
 
         {/* Welcome Banner */}
-        <div style={{ background: "linear-gradient(135deg, #065f46 0%, #047857 100%)", borderRadius: 16, padding: "36px 48px", marginBottom: 28, position: "relative", overflow: "hidden" }}>
+        <div data-onboarding="welcome" style={{ background: "linear-gradient(135deg, #065f46 0%, #047857 100%)", borderRadius: 16, padding: "36px 48px", marginBottom: 28, position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", right: -40, top: -40, width: 220, height: 220, background: "rgba(255,255,255,0.04)", borderRadius: "50%" }} />
           <div style={{ position: "absolute", right: 80, bottom: -60, width: 160, height: 160, background: "rgba(255,255,255,0.04)", borderRadius: "50%" }} />
           <div style={{ position: "relative", zIndex: 1 }}>

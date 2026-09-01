@@ -91,7 +91,7 @@ export default function Portfolio() {
   return (
     <div style={{ height: "100%", overflowY: "auto", padding: "28px 32px", background: c("--bg-base") }}>
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
+      <div data-onboarding="portfolio-doctor" style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: c("--text-primary"), marginBottom: 6 }}>Portfolio Analyzer</h1>
         <p style={{ fontSize: 13, color: c("--text-secondary") }}>P&L · Risk · Signals · AI Health Diagnosis</p>
       </div>
