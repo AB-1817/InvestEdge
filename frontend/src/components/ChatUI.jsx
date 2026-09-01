@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
-const GROQ_KEY = import.meta.env.VITE_GROQ_KEY;
-const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
+const BACKEND = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const CHAT_API = `${BACKEND}/api/chat`;
 const GROQ_MODEL = "llama-3.3-70b-versatile";
-const BACKEND = import.meta.env.VITE_API_URL || "https://investedge-api.onrender.com";
 console.log("[ChatUI] API URL:", BACKEND);
 
 const TOOLS = [
@@ -114,11 +113,10 @@ async function runAgent(messages, onText, onChart) {
   ];
 
   for (let turn = 0; turn < 6; turn++) {
-    const res = await fetch(GROQ_API, {
+    const res = await fetch(CHAT_API, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${GROQ_KEY}`,
       },
       body: JSON.stringify({
         model: GROQ_MODEL,

@@ -13,7 +13,6 @@ function cleanAiText(text) {
   }
   return cleaned.replace(/<\/?think>/gi, "").trim();
 }
-
 export default function StocksAnalysis() {
   const [activeStock, setActiveStock] = useState("DLF");
   const [searchInput, setSearchInput] = useState("");

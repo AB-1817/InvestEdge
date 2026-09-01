@@ -1,6 +1,9 @@
 import asyncio
 from datetime import datetime
 from typing import List, Optional, Dict
+from fastapi import APIRouter
+
+router = APIRouter()
 
 from .bulk_deals import fetch_bulk_deals
 from .filings import fetch_corporate_filings
@@ -68,3 +71,9 @@ async def run_radar(filters: Optional[List[str]] = None) -> Dict:
         ],
         "scan_status": "success",
     }
+
+
+@router.get("/api/radar")
+async def get_radar(sources: Optional[str] = None):
+    filters = [s.strip() for s in sources.split(",")] if sources else None
+    return await run_radar(filters)

@@ -140,7 +140,7 @@ function StockChart({ data, symbol, signals }) {
 
 const c = (n) => `var(${n})`;
 
-export default function ChartIntelligence() {
+export default function ChartIntelligence({ onNav }) {
   const [symbol, setSymbol] = useState("");
   const [period, setPeriod] = useState("6mo");
   const [loading, setLoading] = useState(false);
@@ -445,9 +445,19 @@ export default function ChartIntelligence() {
             {/* Backtest */}
             {data.backtest && (
               <div style={{ background: c("--bg-elevated"), border: `1px solid ${c("--border")}`, borderRadius: 12, overflow: "hidden", marginBottom: 8 }}>
-                <div style={{ padding: "10px 16px", background: "rgba(124,58,237,0.08)", borderBottom: `1px solid rgba(124,58,237,0.2)`, display: "flex", alignItems: "center", gap: 8 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", fontFamily: "Inter, sans-serif", letterSpacing: "0.06em", textTransform: "uppercase" }}>Backtest Result</span>
+                <div style={{ padding: "10px 16px", background: "rgba(124,58,237,0.08)", borderBottom: `1px solid rgba(124,58,237,0.2)`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", fontFamily: "Inter, sans-serif", letterSpacing: "0.06em", textTransform: "uppercase" }}>Quantitative Signal Evidence</span>
+                  </div>
+                  {onNav && (
+                    <button
+                      onClick={() => onNav("backtest")}
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "none", background: "#7c3aed", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+                    >
+                      Run Full Backtest →
+                    </button>
+                  )}
                 </div>
                 <div style={{ padding: "14px 16px", fontSize: 13, color: c("--text-secondary"), fontFamily: "Inter, sans-serif", lineHeight: 1.7 }}>{data.backtest}</div>
               </div>

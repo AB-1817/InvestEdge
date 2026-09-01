@@ -10,6 +10,8 @@ import NewsRAG from "./components/NewsRAG.jsx";
 import VideoEngine from "./components/VideoEngine.jsx";
 import EarningsPredictor from "./components/EarningsPredictor.jsx";
 import MarketRegime from "./components/MarketRegime.jsx";
+import BacktestEngine from "./components/BacktestEngine.jsx";
+import SignalTrackRecord from "./components/SignalTrackRecord.jsx";
 
 export const ThemeContext = createContext({ dark: false, toggle: () => {} });
 
@@ -51,16 +53,18 @@ class ErrorBoundary extends Component {
 }
 
 const VIEWS = {
-  home:      Dashboard,
-  chat:      ChatUI,
-  stocks:    StocksAnalysis,
-  radar:     OpportunityRadarNew,
-  chart:     ChartIntelligence,
-  portfolio: Portfolio,
-  news:      NewsRAG,
-  video:     VideoEngine,
-  earnings:  EarningsPredictor,
-  regime:    MarketRegime,
+  home:        Dashboard,
+  chat:        ChatUI,
+  stocks:      StocksAnalysis,
+  radar:       OpportunityRadarNew,
+  chart:       ChartIntelligence,
+  portfolio:   Portfolio,
+  news:        NewsRAG,
+  video:       VideoEngine,
+  earnings:    EarningsPredictor,
+  regime:      MarketRegime,
+  backtest:    BacktestEngine,
+  trackrecord: SignalTrackRecord,
 };
 
 export default function App() {

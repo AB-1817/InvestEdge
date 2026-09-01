@@ -122,7 +122,7 @@ async def get_contextual_advice(portfolio_holdings: list) -> Dict[str, Any]:
 
     symbols = [h.symbol if hasattr(h, "symbol") else h.get("symbol") for h in portfolio_holdings]
     symbols = [s.upper().strip() for s in symbols if s]
-    news_task = asyncio.create_task(_fetch_news_titles([nse(s) for s in symbols], 5))
+    news_task = asyncio.create_task(asyncio.to_thread(_fetch_news_titles, [nse(s) for s in symbols], 5))
 
     # 2. Portfolio calculations & Health diagnostics concurrently with Semaphore(5)
     sem = asyncio.Semaphore(5)
