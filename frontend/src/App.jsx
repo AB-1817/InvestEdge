@@ -10,6 +10,8 @@ import NewsRAG from "./components/NewsRAG.jsx";
 import VideoEngine from "./components/VideoEngine.jsx";
 import EarningsPredictor from "./components/EarningsPredictor.jsx";
 import MarketRegime from "./components/MarketRegime.jsx";
+import BacktestEngine from "./components/BacktestEngine.jsx";
+import SignalTrackRecord from "./components/SignalTrackRecord.jsx";
 
 export const ThemeContext = createContext({ dark: false, toggle: () => {} });
 
@@ -22,23 +24,17 @@ class ErrorBoundary extends Component {
       return (
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "center",
-          height: "100%", flexDirection: "column", gap: 12,
-          background: "#fff7f7", color: "#dc2626",
-          fontFamily: "JetBrains Mono, monospace", padding: 32,
+          flexDirection: "column", height: "100vh", padding: 32, textAlign: "center",
+          background: "var(--bg-base)", color: "var(--text-primary)"
         }}>
-          <div style={{ fontSize: 32 }}>⚠️</div>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>Something went wrong</div>
-          <div style={{ fontSize: 11, color: "#64748b", maxWidth: 480, textAlign: "center", lineHeight: 1.6 }}>
-            {this.state.error.message}
-          </div>
+          <h2 style={{ fontSize: 20, marginBottom: 12 }}>Something went wrong</h2>
+          <p style={{ color: "var(--text-secondary)", marginBottom: 20, maxWidth: 480 }}>{this.state.error.toString()}</p>
           <button
             onClick={() => this.setState({ error: null })}
-            style={{
-              marginTop: 8, padding: "8px 20px", borderRadius: 8, border: "1px solid #fecaca",
-              background: "#fee2e2", color: "#dc2626", cursor: "pointer", fontSize: 12,
-              fontFamily: "JetBrains Mono, monospace",
-            }}
-          >Try again</button>
+            style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "#047857", color: "#fff", cursor: "pointer" }}
+          >
+            Retry
+          </button>
         </div>
       );
     }
@@ -57,6 +53,8 @@ const VIEWS = {
   video:     VideoEngine,
   earnings:  EarningsPredictor,
   regime:    MarketRegime,
+  backtest:  BacktestEngine,
+  trackrecord: SignalTrackRecord,
 };
 
 export default function App() {

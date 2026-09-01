@@ -532,8 +532,9 @@ export default function VideoEngine() {
 
         {/* Error */}
         {error && (
-          <div style={{ padding: "12px 16px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, color: "#dc2626", fontSize: 13, marginBottom: 24 }}>
-            ⚠️ {error}
+          <div style={{ padding: "12px 16px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, color: "#dc2626", fontSize: 13, marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {error}
           </div>
         )}
 
@@ -557,9 +558,20 @@ export default function VideoEngine() {
                       background: playing ? "#fef2f2" : "#f0fdf4",
                       color: playing ? "#dc2626" : "#047857",
                       fontSize: 13, fontWeight: 600, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                     }}
                   >
-                    {playing ? "⏹ Stop" : "▶ Play"}
+                    {playing ? (
+                      <>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                        Stop
+                      </>
+                    ) : (
+                      <>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        Play
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={() => playing ? stopPlayback() : startPlayback(true)}
@@ -570,9 +582,11 @@ export default function VideoEngine() {
                       color: recording ? "#dc2626" : "#1d4ed8",
                       fontSize: 13, fontWeight: 600, cursor: playing ? "not-allowed" : "pointer",
                       opacity: playing && !recording ? 0.5 : 1,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                     }}
                   >
-                    {recording ? "⏺ Recording…" : "⏺ Record"}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill={recording ? "#dc2626" : "#1d4ed8"}><circle cx="12" cy="12" r="10"/></svg>
+                    {recording ? "Recording…" : "Record"}
                   </button>
                 </div>
                 <button
@@ -583,13 +597,16 @@ export default function VideoEngine() {
                     background: recorded ? "#faf5ff" : "#f3f4f6",
                     color: recorded ? "#7c3aed" : "#9ca3af",
                     fontSize: 13, fontWeight: 600, cursor: recorded ? "pointer" : "not-allowed",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                   }}
                 >
-                  ⬇ Download
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download
                 </button>
                 {recorded && (
-                  <div style={{ marginTop: 10, padding: "8px 12px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, fontSize: 11, color: "#047857" }}>
-                    ✅ Video ready! Click Download.
+                  <div style={{ marginTop: 10, padding: "8px 12px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, fontSize: 11, color: "#047857", display: "flex", alignItems: "center", gap: 6 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Video ready! Click Download.
                   </div>
                 )}
               </div>

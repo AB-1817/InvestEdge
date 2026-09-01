@@ -20,8 +20,13 @@ function StatCard({ label, value, sub, subColor, change, changeUp, children }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <span style={{ fontSize: 11, color: c("--text-muted"), fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: "Inter, sans-serif" }}>{label}</span>
         {change != null && (
-          <span style={{ fontSize: 11, fontWeight: 600, color: changeUp ? "#16a34a" : "#ef4444", background: changeUp ? "rgba(22,163,74,0.1)" : "rgba(239,68,68,0.1)", padding: "2px 8px", borderRadius: 4, fontFamily: "Inter, sans-serif" }}>
-            {changeUp ? "▲" : "▼"} {change}
+          <span style={{ fontSize: 11, fontWeight: 600, color: changeUp ? "#16a34a" : "#ef4444", background: changeUp ? "rgba(22,163,74,0.1)" : "rgba(239,68,68,0.1)", padding: "2px 8px", borderRadius: 4, fontFamily: "Inter, sans-serif", display: "inline-flex", alignItems: "center", gap: 3 }}>
+            {changeUp ? (
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+            ) : (
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            )}
+            {change}
           </span>
         )}
       </div>

@@ -153,7 +153,9 @@ function DetailModal({ opp, onClose }) {
             <div style={{ fontSize: 24, fontWeight: 800, color: c("--text-primary"), fontFamily: "Inter, sans-serif", marginBottom: 4 }}>{opp.symbol}</div>
             <div style={{ fontSize: 14, color: c("--text-secondary"), fontFamily: "Inter, sans-serif" }}>{opp.title}</div>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: c("--text-muted") }}>✕</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: c("--text-muted"), display: "flex", alignItems: "center", justifyContent: "center", padding: 4 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
@@ -254,7 +256,10 @@ export default function OpportunityRadarNew() {
             <div style={{ fontSize: 10, color: c("--text-muted"), textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10 }}>Total Opportunities</div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ fontSize: 40, fontWeight: 800, color: c("--text-primary"), lineHeight: 1 }}>{summary.total ?? "—"}</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#16a34a", background: "rgba(22,163,74,0.1)", padding: "3px 8px", borderRadius: 20 }}>↗ +14%</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#16a34a", background: "rgba(22,163,74,0.1)", padding: "3px 8px", borderRadius: 20, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="7 17 17 7"/><polyline points="7 7 17 7 17 17"/></svg>
+                +14%
+              </span>
             </div>
           </div>
 

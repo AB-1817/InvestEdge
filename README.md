@@ -147,7 +147,6 @@ npm install
 Create `.env`:
 ```
 VITE_API_URL=http://localhost:8000
-VITE_GROQ_KEY=your_groq_api_key_here
 ```
 
 Run:

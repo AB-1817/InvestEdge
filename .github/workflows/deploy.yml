@@ -29,8 +29,6 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: frontend
-        env:
-          VITE_GROQ_KEY: ${{ secrets.VITE_GROQ_KEY }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

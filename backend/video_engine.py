@@ -26,14 +26,17 @@ async def _groq(prompt: str, system: str, max_tokens: int = 600) -> str:
             "https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
             json={
-                "model": "llama-3.3-70b-versatile",
+                "model": "qwen/qwen3.6-27b",
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
                 "max_tokens": max_tokens, "temperature": 0.6,
             },
         )
         if resp.status_code != 200:
             return ""
-        return resp.json()["choices"][0]["message"]["content"].strip()
+        import re as _re
+        raw = resp.json()["choices"][0]["message"]["content"]
+        raw = _re.sub(r"<think>.*?</think>", "", raw, flags=_re.DOTALL).strip()
+        return raw
 
 
 # ─── Shared yfinance fetcher ───────────────────────────────────────────────────

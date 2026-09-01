@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
-const GROQ_KEY = import.meta.env.VITE_GROQ_KEY;
-const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
+const BACKEND = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const CHAT_API = `${BACKEND}/api/chat`;
 const GROQ_MODEL = "llama-3.3-70b-versatile";
-const BACKEND = import.meta.env.VITE_API_URL || "https://investedge-api.onrender.com";
 console.log("[ChatUI] API URL:", BACKEND);
 
 const TOOLS = [
@@ -114,11 +113,10 @@ async function runAgent(messages, onText, onChart) {
   ];
 
   for (let turn = 0; turn < 6; turn++) {
-    const res = await fetch(GROQ_API, {
+    const res = await fetch(CHAT_API, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${GROQ_KEY}`,
       },
       body: JSON.stringify({
         model: GROQ_MODEL,
@@ -152,7 +150,7 @@ async function runAgent(messages, onText, onChart) {
       const input = JSON.parse(tc.function.arguments || "{}");
       const sym = input.symbol || "portfolio";
 
-      onText(`\n\n_📡 Fetching live data for **${sym.toUpperCase().replace(".NS", "")}**..._\n\n`);
+      onText(`\n\n_Fetching live data for **${sym.toUpperCase().replace(".NS", "")}**..._\n\n`);
 
       const result = await callTool(name, input);
       if (result.chart_data?.length > 0) onChart(result);
@@ -251,8 +249,15 @@ function StockChart({ data, symbol, signals }) {
               border: `1px solid ${s.direction === "bullish" ? "#bbf7d0" : s.direction === "bearish" ? "#fecaca" : "#e2e8f0"}`,
             }}>{s.type}</span>
           ))}
-          <span style={{ marginLeft: "auto", fontSize: 10.5, color: "#94a3b8", fontFamily: "monospace" }}>
-            🟢 {bull} &nbsp; 🔴 {bear}
+          <span style={{ marginLeft: "auto", fontSize: 10.5, color: "#94a3b8", fontFamily: "monospace", display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span style={{ color: "#16a34a", display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="#16a34a"><circle cx="12" cy="12" r="10"/></svg>
+              {bull}
+            </span>
+            <span style={{ color: "#dc2626", display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="#dc2626"><circle cx="12" cy="12" r="10"/></svg>
+              {bear}
+            </span>
           </span>
         </div>
       )}
@@ -266,13 +271,13 @@ function renderMd(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text-primary);font-weight:600">$1</strong>')
     .replace(/\*(.*?)\*/g, '<em style="color:var(--text-secondary)">$1</em>')
     .replace(/`(.*?)`/g, '<code style="background:var(--bg-elevated);padding:1px 6px;border-radius:3px;font-size:12px;color:#0891b2;font-family:JetBrains Mono,monospace">$1</code>')
-    .replace(/^📊 \*\*Verdict:\*\* (.*)/gm,
-      '<div style="margin:14px 0 4px;padding:10px 14px;background:rgba(124,58,237,0.15);border-left:3px solid #7c3aed;border-radius:0 8px 8px 0;font-size:13px;color:#a78bfa;font-family:JetBrains Mono,monospace">📊 <strong style="color:#a78bfa">Verdict:</strong> $1</div>')
-    .replace(/^💡 \*\*Investment Case:\*\* (.*)/gm,
-      '<div style="margin:14px 0 4px;padding:10px 14px;background:rgba(8,145,178,0.15);border-left:3px solid #0891b2;border-radius:0 8px 8px 0;font-size:13px;color:#22d3ee;font-family:JetBrains Mono,monospace">💡 <strong style="color:#22d3ee">Investment Case:</strong> $1</div>')
+    .replace(/^(?:📊\s*)?\*\*Verdict:\*\* (.*)/gm,
+      '<div style="margin:14px 0 4px;padding:10px 14px;background:rgba(124,58,237,0.15);border-left:3px solid #7c3aed;border-radius:0 8px 8px 0;font-size:13px;color:#a78bfa;font-family:JetBrains Mono,monospace"><strong style="color:#a78bfa">Verdict:</strong> $1</div>')
+    .replace(/^(?:💡\s*)?\*\*Investment Case:\*\* (.*)/gm,
+      '<div style="margin:14px 0 4px;padding:10px 14px;background:rgba(8,145,178,0.15);border-left:3px solid #0891b2;border-radius:0 8px 8px 0;font-size:13px;color:#22d3ee;font-family:JetBrains Mono,monospace"><strong style="color:#22d3ee">Investment Case:</strong> $1</div>')
     .replace(/^### (.*)/gm, '<div style="font-size:12px;font-weight:600;color:var(--text-muted);margin:12px 0 6px;text-transform:uppercase;letter-spacing:0.06em;font-family:JetBrains Mono,monospace">$1</div>')
     .replace(/^## (.*)/gm, '<div style="font-size:15px;font-weight:600;color:var(--text-primary);margin:12px 0 6px">$1</div>')
-    .replace(/^- (.*)/gm, '<div style="display:flex;gap:7px;margin:4px 0;line-height:1.5"><span style="color:#16a34a;margin-top:1px;flex-shrink:0">▸</span><span>$1</span></div>')
+    .replace(/^- (.*)/gm, '<div style="display:flex;gap:7px;margin:4px 0;line-height:1.5"><span style="color:#16a34a;margin-top:1px;flex-shrink:0">▪</span><span>$1</span></div>')
     .replace(/\n/g, "<br/>");
 }
 
@@ -387,7 +392,7 @@ export default function ChatUI() {
         const next = [...prev];
         next[assistantIdx] = {
           role: "assistant",
-          content: `⚠️ **Error:** ${e.message}\n\n- Make sure backend is running: \`uvicorn main:app --reload --port 8000\`\n- Get a free Gemini key at aistudio.google.com and paste it in ChatUI.jsx`,
+          content: `**Error:** ${e.message}\n\n- Make sure backend is running: \`python -m uvicorn main:app --reload --port 8000\`\n- Ensure API keys are set in .env`,
         };
         return next;
       });
@@ -517,7 +522,6 @@ export default function ChatUI() {
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: input.trim() && !loading ? "pointer" : "not-allowed",
-                display: "flex", alignItems: "center", justifyContent: "center",
               }}
             ><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
           </div>

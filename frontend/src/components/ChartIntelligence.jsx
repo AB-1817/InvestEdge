@@ -107,10 +107,16 @@ function StockChart({ data, symbol, signals }) {
         <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#f97316", fontFamily: "Inter, sans-serif" }}>
           <span style={{ width: 16, height: 2, background: "#f97316", display: "inline-block", borderRadius: 1 }} /> EMA 50
         </span>
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "#6b7280", fontFamily: "Inter, sans-serif" }}>
-          <span style={{ color: "#22c55e" }}>▲ {bull} bullish</span>
-          <span style={{ margin: "0 8px", color: "#374151" }}>·</span>
-          <span style={{ color: "#ef4444" }}>▼ {bear} bearish</span>
+        <span style={{ marginLeft: "auto", fontSize: 11, color: "#6b7280", fontFamily: "Inter, sans-serif", display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <span style={{ color: "#22c55e", display: "inline-flex", alignItems: "center", gap: 3 }}>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="18 15 12 9 6 15"/></svg>
+            {bull} bullish
+          </span>
+          <span style={{ margin: "0 4px", color: "#374151" }}>·</span>
+          <span style={{ color: "#ef4444", display: "inline-flex", alignItems: "center", gap: 3 }}>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
+            {bear} bearish
+          </span>
         </span>
       </div>
       <canvas ref={ref} style={{ width: "100%", height: 320, display: "block" }} />
@@ -134,7 +140,7 @@ function StockChart({ data, symbol, signals }) {
 
 const c = (n) => `var(${n})`;
 
-export default function ChartIntelligence() {
+export default function ChartIntelligence({ onNav }) {
   const [symbol, setSymbol] = useState("");
   const [period, setPeriod] = useState("6mo");
   const [loading, setLoading] = useState(false);
@@ -270,8 +276,13 @@ export default function ChartIntelligence() {
                     ₹{price?.current?.toLocaleString("en-IN")}
                   </span>
                   {price?.change_pct != null && (
-                    <span style={{ fontSize: 16, fontWeight: 600, color: price.change_pct >= 0 ? "#16a34a" : "#dc2626", fontFamily: "Inter, sans-serif" }}>
-                      {price.change_pct >= 0 ? "▲" : "▼"} {Math.abs(price.change_pct)}%
+                    <span style={{ fontSize: 16, fontWeight: 600, color: price.change_pct >= 0 ? "#16a34a" : "#dc2626", fontFamily: "Inter, sans-serif", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      {price.change_pct >= 0 ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="18 15 12 9 6 15"/></svg>
+                      ) : (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
+                      )}
+                      {Math.abs(price.change_pct)}%
                     </span>
                   )}
                 </div>
@@ -288,8 +299,10 @@ export default function ChartIntelligence() {
               }}>
                 <div style={{ fontSize: 11, color: c("--text-muted"), fontFamily: "Inter, sans-serif", marginBottom: 4, letterSpacing: "0.05em" }}>OVERALL BIAS</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: biasColor, fontFamily: "Inter, sans-serif", textTransform: "uppercase" }}>{data.bias}</div>
-                <div style={{ fontSize: 11, color: c("--text-muted"), fontFamily: "Inter, sans-serif", marginTop: 2 }}>
-                  {data.bias_counts?.bullish}↑ · {data.bias_counts?.bearish}↓
+                <div style={{ fontSize: 11, color: c("--text-muted"), fontFamily: "Inter, sans-serif", marginTop: 2, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>{data.bias_counts?.bullish} <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="18 15 12 9 6 15"/></svg></span>
+                  <span>·</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>{data.bias_counts?.bearish} <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg></span>
                 </div>
               </div>
             </div>
@@ -305,28 +318,32 @@ export default function ChartIntelligence() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12, marginBottom: 28 }}>
               {[
                 {
-                  label: "RELATIVE STRENGTH", icon: "↗", iconColor: "#16a34a",
+                  label: "RELATIVE STRENGTH",
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><polyline points="7 17 17 7"/><polyline points="7 7 17 7 17 17"/></svg>,
                   value: price?.rsi?.toFixed(1),
                   sub: price?.rsi < 35 ? "Oversold (30)" : price?.rsi > 65 ? "Overbought (70)" : "Neutral Zone",
                   subColor: price?.rsi < 35 ? "#16a34a" : price?.rsi > 65 ? "#ef4444" : "#6b7280",
                   bar: price?.rsi ? price.rsi / 100 : null, barColor: price?.rsi < 35 ? "#16a34a" : price?.rsi > 65 ? "#ef4444" : "#047857",
                 },
                 {
-                  label: "EMA 200 CROSS", icon: "✓", iconColor: price?.current && price?.ema200 ? (price.current > price.ema200 ? "#16a34a" : "#ef4444") : "#6b7280",
+                  label: "EMA 200 CROSS",
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={price?.current && price?.ema200 ? (price.current > price.ema200 ? "#16a34a" : "#ef4444") : "#6b7280"} strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>,
                   value: price?.ema200 ? `₹${price.ema200.toFixed(0)}` : null,
                   sub: price?.current && price?.ema200 ? (price.current > price.ema200 ? "Price above long-term" : "Price below long-term") : "",
                   subColor: price?.current && price?.ema200 ? (price.current > price.ema200 ? "#16a34a" : "#ef4444") : "#6b7280",
                   bar: null,
                 },
                 {
-                  label: "MACD DIVERGENCE", icon: "⚡", iconColor: "#3b82f6",
+                  label: "MACD DIVERGENCE",
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
                   value: price?.ema20 && price?.ema50 ? Math.abs(price.ema20 - price.ema50).toFixed(1) : null,
                   sub: price?.ema20 && price?.ema50 ? (price.ema20 > price.ema50 ? "Positive Arc" : "Negative Arc") : "",
                   subColor: price?.ema20 && price?.ema50 ? (price.ema20 > price.ema50 ? "#16a34a" : "#ef4444") : "#6b7280",
                   bar: null,
                 },
                 {
-                  label: "VOLATILITY BANDS", icon: "↕", iconColor: "#d97706",
+                  label: "VOLATILITY BANDS",
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.5"><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>,
                   value: price?.atr ? `${((price.atr / price.current) * 100).toFixed(1)}%` : null,
                   sub: price?.atr && price.current ? (price.atr / price.current > 0.025 ? "Squeeze Imminent" : price.atr / price.current > 0.015 ? "Moderate Range" : "Tight Range") : "",
                   subColor: "#d97706",
@@ -334,13 +351,15 @@ export default function ChartIntelligence() {
                   barColor: "#d97706",
                 },
                 {
-                  label: "52W HIGH", icon: "▲", iconColor: "#16a34a",
+                  label: "52W HIGH",
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><polyline points="18 15 12 9 6 15"/></svg>,
                   value: price?.["52w_high"] ? `₹${price["52w_high"].toFixed(0)}` : null,
                   sub: price?.current && price?.["52w_high"] ? `${(((price["52w_high"] - price.current) / price["52w_high"]) * 100).toFixed(1)}% from top` : "",
                   subColor: "#6b7280", bar: null,
                 },
                 {
-                  label: "52W LOW", icon: "▼", iconColor: "#ef4444",
+                  label: "52W LOW",
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>,
                   value: price?.["52w_low"] ? `₹${price["52w_low"].toFixed(0)}` : null,
                   sub: price?.current && price?.["52w_low"] ? `${(((price.current - price["52w_low"]) / price["52w_low"]) * 100).toFixed(1)}% above base` : "",
                   subColor: "#6b7280", bar: null,
@@ -385,10 +404,16 @@ export default function ChartIntelligence() {
                     Detected Signals
                     <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: "#ffffff", background: "#047857", borderRadius: 20, padding: "2px 8px" }}>{data.signals.length}</span>
                   </div>
-                  <div style={{ display: "flex", gap: 12, fontSize: 12, fontFamily: "Inter, sans-serif" }}>
-                    <span style={{ color: "#16a34a", fontWeight: 500 }}>▲ {data.bias_counts?.bullish} Bullish</span>
+                  <div style={{ display: "flex", gap: 12, fontSize: 12, fontFamily: "Inter, sans-serif", alignItems: "center" }}>
+                    <span style={{ color: "#16a34a", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="18 15 12 9 6 15"/></svg>
+                      {data.bias_counts?.bullish} Bullish
+                    </span>
                     <span style={{ color: "#9ca3af" }}>·</span>
-                    <span style={{ color: "#ef4444", fontWeight: 500 }}>▼ {data.bias_counts?.bearish} Bearish</span>
+                    <span style={{ color: "#ef4444", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
+                      {data.bias_counts?.bearish} Bearish
+                    </span>
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -420,9 +445,19 @@ export default function ChartIntelligence() {
             {/* Backtest */}
             {data.backtest && (
               <div style={{ background: c("--bg-elevated"), border: `1px solid ${c("--border")}`, borderRadius: 12, overflow: "hidden", marginBottom: 8 }}>
-                <div style={{ padding: "10px 16px", background: "rgba(124,58,237,0.08)", borderBottom: `1px solid rgba(124,58,237,0.2)`, display: "flex", alignItems: "center", gap: 8 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", fontFamily: "Inter, sans-serif", letterSpacing: "0.06em", textTransform: "uppercase" }}>Backtest Result</span>
+                <div style={{ padding: "10px 16px", background: "rgba(124,58,237,0.08)", borderBottom: `1px solid rgba(124,58,237,0.2)`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", fontFamily: "Inter, sans-serif", letterSpacing: "0.06em", textTransform: "uppercase" }}>Quantitative Signal Evidence</span>
+                  </div>
+                  {onNav && (
+                    <button
+                      onClick={() => onNav("backtest")}
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "none", background: "#7c3aed", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+                    >
+                      Run Full Backtest →
+                    </button>
+                  )}
                 </div>
                 <div style={{ padding: "14px 16px", fontSize: 13, color: c("--text-secondary"), fontFamily: "Inter, sans-serif", lineHeight: 1.7 }}>{data.backtest}</div>
               </div>

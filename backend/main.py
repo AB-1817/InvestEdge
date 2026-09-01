@@ -54,14 +54,70 @@ def _atr(high: pd.Series, low: pd.Series, close: pd.Series, length=14) -> pd.Ser
 
 
 
+from backtesting.routes import router as backtest_router
+from chat_service import router as chat_router
+from routes_track_record import router as track_record_router
+from ledger_service import record_investedge_signal
+from earnings_event_study import get_earnings_event_study
+from rate_limiter import RateLimitMiddleware
+
+def get_cors_origins() -> list:
+    """
+    Parses allowed CORS origins from environment variable CORS_ORIGINS.
+    Defaults to trusted InvestEdge production and development origins.
+    Never uses wildcard '*'.
+    """
+    raw_env = os.getenv("CORS_ORIGINS", "").strip()
+    if raw_env:
+        origins = [o.strip() for o in raw_env.replace(";", ",").split(",") if o.strip()]
+        if origins:
+            return origins
+
+    # Default explicit trusted origins from repository evidence
+    return [
+        "https://invest-edge-eight.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://localhost:4173"
+    ]
+
+
+import logging
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+logger = logging.getLogger("investedge")
+logging.basicConfig(level=logging.INFO)
+
 app = FastAPI(title="StockSense AI Backend", version="2.0.0")
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, HTTPException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+            headers=getattr(exc, "headers", None)
+        )
+    logger.error(f"Unhandled exception on {request.url.path}: {exc.__class__.__name__}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal server error occurred processing your request."}
+    )
+
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=get_cors_origins(),
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With"],
 )
+
+app.include_router(backtest_router)
+app.include_router(chat_router)
+app.include_router(track_record_router)
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -242,27 +298,29 @@ async def detect_patterns(req: PatternReq):
                                  "detail": f"Only {pct_from_low:.1f}% above 52W low ₹{y_low:.0f} — near support"})
 
         backtest = None
-        oversold_days = df[df["rsi"] < 32].index
-        if len(oversold_days) > 2:
-            gains = []
-            for dt in oversold_days[:-1]:
-                try:
-                    pos = df.index.get_loc(dt)
-                    ep = sf(df["close"].iloc[pos])
-                    fp = sf(df["close"].iloc[min(pos + 15, len(df) - 1)])
-                    if ep and fp:
-                        gains.append(((fp - ep) / ep) * 100)
-                except Exception:
-                    pass
-            if gains:
-                wr = sum(1 for g in gains if g > 0) / len(gains) * 100
-                ag = sum(gains) / len(gains)
-                backtest = (f"RSI<32 appeared {len(gains)} times on {ticker.replace('.NS','')} "
-                            f"in this window. Win rate at +15 days: {wr:.0f}%, avg move: {ag:+.1f}%")
+        try:
+            from backtesting.engine import get_historical_signal_evidence
+            ev = get_historical_signal_evidence(ticker, "RSI Oversold", period="1y")
+            if ev and ev.total_signals > 0:
+                backtest = ev.description
+        except Exception:
+            pass
 
         bull_n = sum(1 for s in signals if s["direction"] == "bullish")
         bear_n = sum(1 for s in signals if s["direction"] == "bearish")
         bias   = "bullish" if bull_n > bear_n else ("bearish" if bear_n > bull_n else "neutral")
+
+        # Record genuine live technical pattern signal into ledger
+        if price_now and signals:
+            top_sig = signals[0]
+            record_investedge_signal(
+                symbol=ticker.replace(".NS", "").replace(".BO", ""),
+                signal_type=top_sig["type"],
+                strategy_name="pattern_agent",
+                signal_direction="BUY" if top_sig["direction"] == "bullish" else ("SELL" if top_sig["direction"] == "bearish" else "HOLD"),
+                signal_price=price_now,
+                snapshot={"rsi": sf(cur.get("rsi")), "ema20": sf(cur.get("ema20")), "signals_count": len(signals), "top_signal": top_sig}
+            )
 
         price_snap = {
             "current":    price_now,
@@ -621,13 +679,17 @@ async def _groq_chat(prompt: str, system: str = "You are a financial analyst AI.
                     "https://api.groq.com/openai/v1/chat/completions",
                     headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
                     json={
-                        "model": "llama-3.3-70b-versatile",
+                        "model": "qwen/qwen3.6-27b",
                         "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
                         "max_tokens": 400, "temperature": 0.4,
                     },
                 )
                 if resp.status_code == 200:
-                    return resp.json()["choices"][0]["message"]["content"].strip()
+                    raw = resp.json()["choices"][0]["message"]["content"]
+                    # Strip <think>...</think> reasoning blocks emitted by qwen models
+                    import re as _re
+                    raw = _re.sub(r"<think>.*?</think>", "", raw, flags=_re.DOTALL).strip()
+                    return raw
                 else:
                     print(f"Groq key {current_key_index + 1} failed with status {resp.status_code}")
                     current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
@@ -660,118 +722,24 @@ class DoctorReq(BaseModel):
 
 @app.post("/api/portfolio/doctor")
 async def portfolio_doctor(req: DoctorReq):
-    """Analyzes portfolio health: concentration, sector balance, risk, and AI recommendations."""
-    results = []
-    sector_map = {}
-    total_invested = 0.0
-    total_current = 0.0
+    """Analyzes portfolio health with multi-agent orchestration (Regime, Risk, News, Doctor)."""
+    try:
+        from orchestrator import get_contextual_advice
+        return await get_contextual_advice(req.holdings)
+    except Exception as e:
+        raise HTTPException(500, str(e))
 
-    # Fetch each holding sequentially
-    for h in req.holdings:
-        ticker = nse(h.symbol)
-        try:
-            t = yf.Ticker(ticker)
-            info = t.info or {}
-            raw = yf.download(ticker, period="3mo", interval="1d", progress=False, auto_adjust=True)
-            if raw.empty:
-                continue
-            df = flatten_cols(raw)
-            close = df["close"]
-            rsi_v = sf(_rsi(close, 14).iloc[-1])
-            cur_p = sf(close.iloc[-1])
-            prev_p = sf(close.iloc[-2])
-            sector = info.get("sector", "Unknown")
-            invested = h.qty * h.avg_cost
-            current = h.qty * (cur_p or 0)
-            pnl_pct = sf(((current - invested) / invested) * 100) if invested else 0
-            total_invested += invested
-            total_current += current
-            results.append({
-                "symbol": h.symbol.upper(),
-                "sector": sector,
-                "invested": round(invested, 2),
-                "current": round(current, 2),
-                "pnl_pct": pnl_pct,
-                "weight": 0,
-                "rsi": rsi_v,
-                "beta": sf(info.get("beta")),
-                "pe": sf(info.get("trailingPE")),
-            })
-            sector_map[sector] = sector_map.get(sector, 0) + current
-        except Exception:
-            continue
 
-    # Compute weights
-    for r in results:
-        r["weight"] = round((r["current"] / total_current * 100) if total_current else 0, 1)
+# ─── Multi-Agent Orchestration: Single Stock Cross-Referencing ─────────────────
 
-    # Health scoring
-    score = 100
-    issues = []
-    suggestions = []
-
-    # Concentration risk
-    max_weight = max((r["weight"] for r in results), default=0)
-    if max_weight > 40:
-        score -= 20
-        issues.append(f"High concentration: one stock is {max_weight:.0f}% of portfolio")
-        suggestions.append("Reduce largest position to below 25% for better diversification")
-    elif max_weight > 25:
-        score -= 10
-        issues.append(f"Moderate concentration: top holding is {max_weight:.0f}%")
-
-    # Sector concentration
-    if sector_map:
-        top_sector = max(sector_map, key=sector_map.get)
-        top_sector_pct = (sector_map[top_sector] / total_current * 100) if total_current else 0
-        if top_sector_pct > 50:
-            score -= 15
-            issues.append(f"Sector overweight: {top_sector} is {top_sector_pct:.0f}% of portfolio")
-            suggestions.append(f"Diversify out of {top_sector} — consider adding defensive sectors")
-
-    # RSI overbought holdings
-    overbought = [r["symbol"] for r in results if r["rsi"] and r["rsi"] > 70]
-    if overbought:
-        score -= 5 * len(overbought)
-        issues.append(f"Overbought signals: {', '.join(overbought)} (RSI > 70)")
-        suggestions.append(f"Consider booking partial profits in {', '.join(overbought)}")
-
-    # Losers
-    big_losers = [r["symbol"] for r in results if r["pnl_pct"] and r["pnl_pct"] < -15]
-    if big_losers:
-        score -= 10
-        issues.append(f"Significant drawdown: {', '.join(big_losers)} down >15%")
-        suggestions.append(f"Review stop-loss levels for {', '.join(big_losers)}")
-
-    score = max(0, min(100, score))
-    grade = "A" if score >= 85 else "B" if score >= 70 else "C" if score >= 55 else "D"
-
-    # AI narrative
-    holdings_summary = ", ".join(f"{r['symbol']} ({r['weight']}%)" for r in results)
-    sector_summary = ", ".join(f"{k}: {v/total_current*100:.0f}%" for k, v in sector_map.items()) if total_current else ""
-    pnl_total = round(total_current - total_invested, 2)
-    pnl_pct_total = round((pnl_total / total_invested * 100) if total_invested else 0, 2)
-
-    ai_advice = await _groq_chat(
-        f"Portfolio holdings: {holdings_summary}\nSector allocation: {sector_summary}\n"
-        f"Total P&L: {pnl_pct_total:+.1f}%\nHealth score: {score}/100 (Grade {grade})\n"
-        f"Issues found: {'; '.join(issues) if issues else 'None'}\n\n"
-        "Give 3 specific, actionable portfolio improvement recommendations in 2-3 sentences each. "
-        "Be direct, data-driven, and specific to Indian markets.",
-        system="You are a SEBI-registered portfolio advisor specializing in Indian equity markets."
-    )
-
-    return {
-        "score": score,
-        "grade": grade,
-        "holdings": results,
-        "sector_allocation": {k: round(v / total_current * 100, 1) for k, v in sector_map.items()} if total_current else {},
-        "summary": {"total_invested": round(total_invested, 2), "total_current": round(total_current, 2), "pnl": pnl_total, "pnl_pct": pnl_pct_total},
-        "issues": issues,
-        "suggestions": suggestions,
-        "ai_advice": ai_advice,
-        "generated_at": datetime.now().isoformat(),
-    }
+@app.get("/api/orchestrate/explain/{symbol}")
+async def orchestrate_explain(symbol: str):
+    """Cross-references Chart, Fundamental, News, and Market Regime agents for a single stock."""
+    try:
+        from orchestrator import get_stock_explanation
+        return await get_stock_explanation(symbol)
+    except Exception as e:
+        raise HTTPException(500, str(e))
 
 
 # ─── INNOVATION 3: Market Regime Detector ─────────────────────────────────────
@@ -975,6 +943,18 @@ async def earnings_predictor(symbol: str):
             system="You are an equity research analyst specializing in Indian listed companies."
         )
 
+        # Record genuine live earnings prediction signal into ledger
+        sig_dir = "BUY" if beat_prob >= 60 else "SELL" if beat_prob < 45 else "HOLD"
+        record_investedge_signal(
+            symbol=symbol,
+            signal_type="Earnings Prediction",
+            strategy_name="earnings_predictor",
+            signal_direction=sig_dir,
+            signal_price=cur,
+            confidence=float(beat_prob),
+            snapshot={"beat_probability": beat_prob, "verdict": verdict, "rsi": rsi, "ret_10d": ret_10d}
+        )
+
         return {
             "symbol": symbol.upper(),
             "beat_probability": beat_prob,
@@ -1000,6 +980,15 @@ async def earnings_predictor(symbol: str):
         raise
     except Exception as e:
         raise HTTPException(500, str(e))
+
+
+@app.get("/api/earnings/event-study/{symbol}")
+async def earnings_event_study_endpoint(symbol: str):
+    """
+    Returns Historical Earnings Event Study analyzing price action around past quarterly releases.
+    Explicitly labeled as EVENT STUDY — DATA LIMITED.
+    """
+    return get_earnings_event_study(symbol)
 
 # ─── Agent 5: Real-Time Signal Engine ───────────────────────────────────────
 

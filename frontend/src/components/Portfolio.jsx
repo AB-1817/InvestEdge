@@ -253,21 +253,163 @@ export default function Portfolio() {
             })}
           </div>
 
-          {/* ── AI Advice + Action Items ── */}
+          {/* ── Multi-Agent Orchestrated Intelligence & Advice ── */}
           {doctor && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
-              <div style={{ background: "linear-gradient(135deg, #065f46 0%, #047857 100%)", borderRadius: 16, padding: 24 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 12, display: "flex", alignItems: "center", gap: 7 }}><Icon d={ICONS.robot} size={16} stroke="#fff" />AI Recommendations</div>
-                <div style={{ fontSize: 13, color: "#d1fae5", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{doctor.ai_advice}</div>
-              </div>
-              {doctor.suggestions.length > 0 && (
-                <div style={{ background: c("--bg-elevated"), borderRadius: 16, border: `1px solid ${c("--border")}`, padding: 24 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: c("--text-primary"), marginBottom: 14, display: "flex", alignItems: "center", gap: 7 }}><Icon d={ICONS.check} size={15} stroke="#047857" />Action Items</div>
-                  {doctor.suggestions.map((s, i) => (
-                    <div key={i} style={{ display: "flex", gap: 10, marginBottom: 12, padding: "10px 14px", background: "rgba(4,120,87,0.06)", borderRadius: 10, borderLeft: "3px solid #047857" }}>
-                      <span style={{ fontSize: 13, color: c("--text-primary"), lineHeight: 1.6 }}>{s}</span>
+            <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* Orchestrator Hero Synthesis */}
+              <div style={{
+                background: "linear-gradient(135deg, #064e3b 0%, #047857 60%, #059669 100%)",
+                borderRadius: 16, padding: "26px 28px", color: "#fff",
+                boxShadow: "0 4px 20px rgba(4,120,87,0.15)",
+                border: "1px solid rgba(255,255,255,0.12)",
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Icon d={ICONS.robot} size={18} stroke="#fff" />
                     </div>
-                  ))}
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: "-0.01em" }}>Multi-Agent Orchestrated Advisory</div>
+                      <div style={{ fontSize: 11, color: "#a7f3d0" }}>Synthesized across Market Regime, News RAG, Risk Engine & Doctor</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: "4px 8px", borderRadius: 20, background: "rgba(255,255,255,0.18)", color: "#fff", display: "flex", alignItems: "center", gap: 4 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+                      Regime: {doctor.regime?.regime || "Active"}
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: "4px 8px", borderRadius: 20, background: "rgba(255,255,255,0.18)", color: "#fff", display: "flex", alignItems: "center", gap: 4 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"/></svg>
+                      News: {doctor.relevant_news?.length || 0} feeds
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: "4px 8px", borderRadius: 20, background: "rgba(255,255,255,0.18)", color: "#fff", display: "flex", alignItems: "center", gap: 4 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                      Grade {doctor.grade}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, color: "#ecfdf5", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                  {doctor.synthesized_advice || doctor.ai_advice}
+                </div>
+              </div>
+
+              {/* 4 Multi-Agent Attribution Cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+                {/* 1. Market Regime Agent */}
+                <div style={{ background: c("--bg-elevated"), borderRadius: 14, border: `1px solid ${c("--border")}`, padding: "18px 20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: c("--text-primary"), display: "flex", alignItems: "center", gap: 6 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+                      Market Regime
+                    </div>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "rgba(4,120,87,0.1)", color: "#047857", textTransform: "uppercase" }}>
+                      from Regime Agent
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: doctor.regime?.color || "#047857", marginBottom: 4 }}>
+                    {doctor.regime?.regime || "Sideways Chop"}
+                  </div>
+                  <div style={{ fontSize: 12, color: c("--text-secondary"), lineHeight: 1.5 }}>
+                    {doctor.regime?.description || "Market trend and volatility conditions monitored."}
+                  </div>
+                </div>
+
+                {/* 2. News RAG Agent */}
+                <div style={{ background: c("--bg-elevated"), borderRadius: 14, border: `1px solid ${c("--border")}`, padding: "18px 20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: c("--text-primary"), display: "flex", alignItems: "center", gap: 6 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
+                      News Intelligence
+                    </div>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "rgba(3,105,161,0.1)", color: "#0284c7", textTransform: "uppercase" }}>
+                      from News Agent
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: c("--text-primary"), fontWeight: 500, marginBottom: 4 }}>
+                    {doctor.relevant_news?.[0]?.title ? `"${doctor.relevant_news[0].title}"` : "No urgent catalysts"}
+                  </div>
+                  <div style={{ fontSize: 11, color: c("--text-muted") }}>
+                    {doctor.relevant_news?.length ? `Cross-referenced ${doctor.relevant_news.length} recent articles across portfolio tickers.` : "Live news streams checked."}
+                  </div>
+                </div>
+
+                {/* 3. Risk Agent */}
+                <div style={{ background: c("--bg-elevated"), borderRadius: 14, border: `1px solid ${c("--border")}`, padding: "18px 20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: c("--text-primary"), display: "flex", alignItems: "center", gap: 6 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      Risk & Allocation
+                    </div>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "rgba(234,88,12,0.1)", color: "#ea580c", textTransform: "uppercase" }}>
+                      from Risk Agent
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: c("--text-secondary"), lineHeight: 1.5 }}>
+                    {doctor.allocation_summary ? `Allocation: ${doctor.allocation_summary}` : "Concentration within acceptable limits."}
+                  </div>
+                </div>
+
+                {/* 4. Portfolio Doctor */}
+                <div style={{ background: c("--bg-elevated"), borderRadius: 14, border: `1px solid ${c("--border")}`, padding: "18px 20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: c("--text-primary"), display: "flex", alignItems: "center", gap: 6 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                      Health Diagnostics
+                    </div>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "rgba(124,58,237,0.1)", color: "#7c3aed", textTransform: "uppercase" }}>
+                      from Portfolio Doctor
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: c("--text-secondary"), lineHeight: 1.5 }}>
+                    Grade {doctor.grade} ({doctor.score}/100) — {doctor.issues?.length ? `${doctor.issues.length} areas to optimize.` : "Portfolio metrics healthy."}
+                  </div>
+                </div>
+              </div>
+
+              {/* Cross-Referenced Risk Flags */}
+              {doctor.risk_flags?.length > 0 && (
+                <div style={{ background: c("--bg-elevated"), borderRadius: 14, border: `1px solid ${c("--border")}`, padding: 20 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: c("--text-primary"), marginBottom: 12, display: "flex", alignItems: "center", gap: 7 }}>
+                    <Icon d={ICONS.warn} size={15} stroke="#dc2626" />
+                    Cross-Referenced Risk Flags
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {doctor.risk_flags.map((rf, idx) => (
+                      <div key={idx} style={{
+                        display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+                        padding: "10px 14px", borderRadius: 8,
+                        background: rf.severity === "high" ? "rgba(220,38,38,0.06)" : "rgba(217,119,6,0.06)",
+                        borderLeft: `3px solid ${rf.severity === "high" ? "#dc2626" : "#d97706"}`,
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: rf.severity === "high" ? "#dc2626" : "#d97706", marginBottom: 2 }}>
+                            {rf.flag}
+                          </div>
+                          <div style={{ fontSize: 12, color: c("--text-secondary") }}>{rf.detail}</div>
+                        </div>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: c("--bg-surface"), color: c("--text-muted"), whiteSpace: "nowrap", marginLeft: 12 }}>
+                          {rf.agent}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Items */}
+              {doctor.suggestions?.length > 0 && (
+                <div style={{ background: c("--bg-elevated"), borderRadius: 14, border: `1px solid ${c("--border")}`, padding: 20 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: c("--text-primary"), marginBottom: 12, display: "flex", alignItems: "center", gap: 7 }}>
+                    <Icon d={ICONS.check} size={15} stroke="#047857" />
+                    Orchestrated Action Items
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    {doctor.suggestions.map((s, i) => (
+                      <div key={i} style={{ padding: "10px 14px", background: "rgba(4,120,87,0.06)", borderRadius: 8, borderLeft: "3px solid #047857", fontSize: 12, color: c("--text-primary"), lineHeight: 1.5 }}>
+                        {s}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

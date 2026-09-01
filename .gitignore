@@ -31,7 +31,9 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# ── Secrets ────────────────────────────────────────────
+# ── Secrets & Databases ────────────────────────────────
 .env
 .env.*
 !.env.example
+*.db
+investedge.db
