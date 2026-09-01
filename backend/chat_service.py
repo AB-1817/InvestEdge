@@ -78,7 +78,7 @@ async def chat_proxy(req: ChatRequest):
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             res = await client.post(GROQ_API_URL, headers=headers, json=payload)
-            if not res.ok:
+            if not res.is_success:
                 err_data = res.json() if res.headers.get("content-type", "").startswith("application/json") else {}
                 safe_msg = err_data.get("error", {}).get("message", f"Upstream Groq API returned status {res.status_code}")
                 raise HTTPException(status_code=502, detail=f"LLM Service Error: {safe_msg}")
