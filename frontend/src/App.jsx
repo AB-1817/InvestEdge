@@ -12,6 +12,7 @@ import EarningsPredictor from "./components/EarningsPredictor.jsx";
 import MarketRegime from "./components/MarketRegime.jsx";
 import BacktestEngine from "./components/BacktestEngine.jsx";
 import SignalTrackRecord from "./components/SignalTrackRecord.jsx";
+import OnboardingGuide from "./components/OnboardingGuide.jsx";
 
 export const ThemeContext = createContext({ dark: false, toggle: () => {} });
 
@@ -94,6 +95,7 @@ export default function App() {
             <View onNav={setView} />
           </ErrorBoundary>
         </main>
+        <OnboardingGuide currentView={view} onNav={setView} />
       </div>
     </ThemeContext.Provider>
   );

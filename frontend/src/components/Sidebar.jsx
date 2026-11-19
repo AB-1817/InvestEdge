@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { ThemeContext } from "../App.jsx";
 
 const NAV_MAIN = [
@@ -25,11 +25,18 @@ export default function Sidebar({ active, onNav, user, isOpen, onToggle }) {
   const { dark, toggle } = useContext(ThemeContext);
   const [innovOpen, setInnovOpen] = useState(() => INNOVATION_IDS.has(active));
 
+  useEffect(() => {
+    if (INNOVATION_IDS.has(active)) {
+      setInnovOpen(true);
+    }
+  }, [active]);
+
   const NavItem = ({ item }) => {
     const isActive = active === item.id;
     return (
       <button
         key={item.id}
+        data-onboarding-nav={item.id}
         onClick={() => onNav(item.id)}
         style={{
           width: "100%", display: "flex", alignItems: "center", gap: 12,
@@ -158,6 +165,26 @@ export default function Sidebar({ active, onNav, user, isOpen, onToggle }) {
           borderTop: "1px solid var(--border)",
           flexShrink: 0,
         }}>
+          {/* How to Use Onboarding button */}
+          <button
+            onClick={() => {
+              if (window.startInvestEdgeOnboarding) {
+                window.startInvestEdgeOnboarding();
+              }
+            }}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)",
+              background: "var(--bg-elevated)", cursor: "pointer", marginBottom: 8,
+            }}
+          >
+            <span style={{ fontSize: 12, color: "var(--text-secondary)", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: 7 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#047857" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              How to Use
+            </span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#047857", background: "rgba(4,120,87,0.1)", padding: "2px 6px", borderRadius: 4, fontFamily: "JetBrains Mono, monospace" }}>TOUR</span>
+          </button>
+
           {/* Dark mode toggle */}
           <button
             onClick={toggle}

@@ -60,7 +60,7 @@ export default function EarningsPredictor() {
       </div>
 
       {/* Search */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+      <div data-onboarding="earnings-study" style={{ display: "flex", gap: 12, marginBottom: 20 }}>
         <input value={symbol} onChange={e => setSymbol(e.target.value.toUpperCase())}
           onKeyDown={e => e.key === "Enter" && predict()}
           placeholder="Enter NSE symbol (e.g. RELIANCE)"
