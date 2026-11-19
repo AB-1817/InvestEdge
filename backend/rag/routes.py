@@ -18,7 +18,7 @@ retriever_instance = Retriever()
 
 class RAGQueryRequest(BaseModel):
     query: str = Field(..., min_length=2, max_length=1000, description="User search query")
-    symbol: Optional[str] = Field(default=None, description="Optional stock symbol to filter by (e.g. RELIANCE)")
+    symbol: Optional[str] = Field(default=None, max_length=20, description="Optional stock symbol to filter by (e.g. RELIANCE)")
     k: int = Field(default=4, ge=1, le=15, description="Number of document chunks to retrieve")
     use_mmr: bool = Field(default=True, description="Enable Maximal Marginal Relevance diversity reranking")
 
@@ -32,7 +32,7 @@ class RAGQueryResponse(BaseModel):
 
 
 class RAGIngestRequest(BaseModel):
-    symbols: Optional[List[str]] = Field(default=None, description="List of symbols to ingest (defaults to top NSE symbols)")
+    symbols: Optional[List[str]] = Field(default=None, max_length=50, description="List of symbols to ingest (defaults to top NSE symbols)")
 
 
 def verify_admin_token(

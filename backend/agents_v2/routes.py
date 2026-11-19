@@ -16,8 +16,8 @@ root_agent_instance = ADKRootAgent()
 
 class AgentQueryRequest(BaseModel):
     query: str = Field(..., min_length=2, max_length=1500, description="User financial inquiry")
-    symbol: Optional[str] = Field(default=None, description="Optional stock symbol (e.g. RELIANCE, TCS)")
-    holdings: Optional[List[Dict[str, Any]]] = Field(default=None, description="Optional portfolio holdings list")
+    symbol: Optional[str] = Field(default=None, max_length=25, description="Optional stock symbol (e.g. RELIANCE, TCS)")
+    holdings: Optional[List[Dict[str, Any]]] = Field(default=None, max_length=100, description="Optional portfolio holdings list")
     max_steps: Optional[int] = Field(default=4, ge=1, le=10, description="Maximum ReAct steps per sub-agent")
     enable_reflection: Optional[bool] = Field(default=None, description="Toggle critic reflection step")
 

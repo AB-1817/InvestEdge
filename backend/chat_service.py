@@ -1,6 +1,7 @@
 import os
 import time
 import uuid
+import asyncio
 import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -79,13 +80,21 @@ async def chat_proxy(req: ChatRequest):
 
     t0 = time.perf_counter()
     trace_id = f"trace_{uuid.uuid4().hex[:16]}"
+    max_retries = 2
+    res = None
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            res = await client.post(GROQ_API_URL, headers=headers, json=payload)
+            for attempt in range(max_retries):
+                res = await client.post(GROQ_API_URL, headers=headers, json=payload)
+                if (res.status_code == 429 or res.status_code >= 500) and attempt < max_retries - 1:
+                    await asyncio.sleep(0.5 * (2 ** attempt))
+                    continue
+                break
+
             latency_ms = round((time.perf_counter() - t0) * 1000, 2)
-            if not res.ok:
-                err_data = res.json() if res.headers.get("content-type", "").startswith("application/json") else {}
-                safe_msg = err_data.get("error", {}).get("message", f"Upstream Groq API returned status {res.status_code}")
+            if not res or not res.ok:
+                err_data = res.json() if res and res.headers.get("content-type", "").startswith("application/json") else {}
+                safe_msg = err_data.get("error", {}).get("message", f"Upstream Groq API returned status {res.status_code if res else '503'}")
                 try:
                     from observability.metrics import record_llm_call
                     record_llm_call(

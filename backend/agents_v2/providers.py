@@ -64,11 +64,28 @@ async def call_groq_llm(
     }
 
     t0 = time.perf_counter()
+    resp = None
+    max_retries = 3
     async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+        for attempt in range(max_retries):
+            try:
+                resp = await client.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+                if resp.status_code == 429 or resp.status_code >= 500:
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(0.5 * (2 ** attempt))
+                        continue
+                break
+            except (httpx.TimeoutException, httpx.NetworkError) as e:
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(0.5 * (2 ** attempt))
+                    continue
+                raise RuntimeError(f"Groq API connection error: {e}")
+
         latency = round((time.perf_counter() - t0) * 1000, 2)
-        if not resp.is_success:
-            raise RuntimeError(f"Groq API error ({resp.status_code}): {resp.text}")
+        if not resp or not resp.is_success:
+            err_text = resp.text if resp else "No response received"
+            status_code = resp.status_code if resp else "503"
+            raise RuntimeError(f"Groq API error ({status_code}): {err_text}")
 
         data = resp.json()
         choice = data["choices"][0]["message"]
