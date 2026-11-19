@@ -125,3 +125,4 @@ def test_eval_runner_mock_execution():
     assert "metrics" in summary
     assert summary["metrics"]["retrieval_hit_at_4"] >= 0.70
     assert summary["gate_passed"] is True
+

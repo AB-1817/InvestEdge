@@ -129,3 +129,4 @@ def get_tracer() -> ObservabilityTracer:
     if _TRACER_INSTANCE is None:
         _TRACER_INSTANCE = ObservabilityTracer()
     return _TRACER_INSTANCE
+

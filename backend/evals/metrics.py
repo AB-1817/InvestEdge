@@ -135,3 +135,4 @@ def evaluate_llm_as_judge(query: str, answer: str, evidence: str) -> Optional[fl
     Disabled by default; returns None unless explicitly activated via --llm-judge flag.
     """
     return None
+

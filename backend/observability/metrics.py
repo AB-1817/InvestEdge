@@ -238,3 +238,4 @@ def get_recent_calls(limit: int = 50) -> List[Dict[str, Any]]:
         rows = cursor.fetchall()
 
     return [dict(r) for r in rows]
+

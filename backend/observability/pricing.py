@@ -52,3 +52,4 @@ def calculate_llm_cost(model: str, prompt_tokens: int, completion_tokens: int) -
     input_cost = (prompt_tokens * rate[0]) / 1_000_000.0
     output_cost = (completion_tokens * rate[1]) / 1_000_000.0
     return round(input_cost + output_cost, 6)
+

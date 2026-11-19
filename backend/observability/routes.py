@@ -69,3 +69,4 @@ async def get_recent_llm_calls(limit: int = Query(50, ge=1, le=200, description=
         return {"count": len(records), "records": records}
     except Exception as e:
         raise HTTPException(500, f"Failed to retrieve recent LLM calls: {str(e)}")
+

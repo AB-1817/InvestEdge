@@ -210,3 +210,4 @@ def test_tracer_autonomous_null_trace():
     assert span.span_id.startswith("span_")
     span.end(output="Completed successfully")
     assert span.status == "success"
+

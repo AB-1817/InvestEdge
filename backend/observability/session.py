@@ -152,3 +152,4 @@ _SESSION_MANAGER = SessionStateManager()
 
 def get_session_manager() -> SessionStateManager:
     return _SESSION_MANAGER
+
