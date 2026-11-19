@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import LLMMetricsPanel from "./LLMMetricsPanel";
 
 const BACKEND = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const CHAT_API = `${BACKEND}/api/chat`;
@@ -106,7 +107,7 @@ async function callTool(name, input) {
   return res.json();
 }
 
-async function runAgent(messages, onText, onChart) {
+async function runAgent(messages, onText, onChart, onTrace) {
   let history = [
     { role: "system", content: SYSTEM_PROMPT },
     ...messages.map(m => ({ role: m.role, content: m.content || "" })),
@@ -134,6 +135,7 @@ async function runAgent(messages, onText, onChart) {
     }
 
     const data = await res.json();
+    if (data.trace_id && onTrace) onTrace(data.trace_id);
     const choice = data.choices?.[0];
     if (!choice) throw new Error("No response from Groq");
 
@@ -281,7 +283,7 @@ function renderMd(text) {
     .replace(/\n/g, "<br/>");
 }
 
-function Bubble({ msg, chartData }) {
+function Bubble({ msg, chartData, traceId }) {
   if (msg.role === "user") {
     return (
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 18 }}>
@@ -314,6 +316,11 @@ function Bubble({ msg, chartData }) {
             <div style={{ fontSize: 13.5, color: "var(--text-primary)", lineHeight: 1.8, fontFamily: "Inter, sans-serif" }}
               dangerouslySetInnerHTML={{ __html: renderMd(msg.content) }}
             />
+          )}
+          {traceId && (
+            <div style={{ marginTop: 6, fontSize: 10, color: "var(--text-muted)", fontFamily: "monospace", opacity: 0.7 }}>
+              trace: {traceId}
+            </div>
           )}
         </div>
       </div>
@@ -361,6 +368,7 @@ export default function ChatUI() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [chartByMsgIdx, setChartByMsgIdx] = useState({});
+  const [traceIdByMsgIdx, setTraceIdByMsgIdx] = useState({});
   const endRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -385,7 +393,8 @@ export default function ChatUI() {
           next[assistantIdx] = { role: "assistant", content: (next[assistantIdx]?.content || "") + chunk };
           return next;
         }),
-        (chartData) => setChartByMsgIdx(prev => ({ ...prev, [assistantIdx]: chartData }))
+        (chartData) => setChartByMsgIdx(prev => ({ ...prev, [assistantIdx]: chartData })),
+        (traceId) => setTraceIdByMsgIdx(prev => ({ ...prev, [assistantIdx]: traceId }))
       );
     } catch (e) {
       setMessages(prev => {
@@ -423,6 +432,9 @@ export default function ChatUI() {
             fontFamily: "Inter, sans-serif",
             margin: 0,
           }}>Market Brain</h1>
+        </div>
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+          <LLMMetricsPanel compact={true} />
         </div>
       </header>
 
@@ -473,7 +485,7 @@ export default function ChatUI() {
         ) : (
           <div style={{ maxWidth: 900, margin: "0 auto" }}>
             {messages.map((msg, i) => (
-              <Bubble key={i} msg={msg} chartData={chartByMsgIdx[i] || null} />
+              <Bubble key={i} msg={msg} chartData={chartByMsgIdx[i] || null} traceId={traceIdByMsgIdx[i] || null} />
             ))}
             {loading && <Typing />}
             <div ref={endRef} />

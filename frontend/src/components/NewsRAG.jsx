@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { ThemeContext } from "../App";
+import LLMMetricsPanel from "./LLMMetricsPanel";
 
 const BACKEND = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const QUICK_PROMPTS = ["HDFC Bank Q3 Risks", "Semiconductor Supply Chain", "Nifty 50 Technicals"];
@@ -153,6 +154,44 @@ export default function NewsRAG() {
                 <div style={{ fontSize: 11, color: "var(--accent-green)", fontFamily: "Inter, sans-serif" }}>SOURCES: {synthesis.sources.length} articles analyzed</div>
               </div>
             )}
+            {synthesis.citations?.length > 0 && (
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 11, color: "var(--accent-green)", fontWeight: 600, fontFamily: "Inter, sans-serif", marginBottom: 8 }}>CITATIONS ({synthesis.citations.length})</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {synthesis.citations.map((cite, idx) => (
+                    <a
+                      key={idx}
+                      href={cite.url || "#"}
+                      target={cite.url ? "_blank" : "_self"}
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "4px 10px", borderRadius: 6, fontSize: 11,
+                        background: "rgba(4,120,87,0.1)", border: "1px solid rgba(4,120,87,0.25)",
+                        color: "var(--accent-green)", textDecoration: "none",
+                        fontFamily: "Inter, sans-serif", cursor: cite.url ? "pointer" : "default"
+                      }}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                        <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                      </svg>
+                      {cite.source || `[${idx + 1}]`}
+                      {cite.published_at && (
+                        <span style={{ color: "var(--text-muted)", fontSize: 10 }}>
+                          · {new Date(cite.published_at).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                        </span>
+                      )}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            {synthesis.trace_id && (
+              <div style={{ marginTop: 10, fontSize: 10, color: "var(--text-muted)", fontFamily: "monospace", letterSpacing: "0.03em" }}>
+                trace: {synthesis.trace_id}
+              </div>
+            )}
           </div>
         )}
 
@@ -214,6 +253,10 @@ export default function NewsRAG() {
 
       {/* Right Sidebar */}
       <div style={{ width: 320, padding: "24px", borderLeft: "1px solid var(--border)", overflowY: "auto", background: "var(--bg-base)" }}>
+        {/* LLM Metrics - compact telemetry bar */}
+        <div style={{ marginBottom: 16 }}>
+          <LLMMetricsPanel compact={true} />
+        </div>
         {/* Intelligence Stream */}
         <div style={{ background: "linear-gradient(135deg, #047857 0%, #059669 100%)", borderRadius: 12, padding: "20px", marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
