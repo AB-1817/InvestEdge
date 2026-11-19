@@ -87,7 +87,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         path = request.url.path
 
         # Ignore static assets, docs, health check
-        if path in ["/", "/health", "/docs", "/openapi.json"] or path.startswith("/assets"):
+        if path in ["/", "/health", "/healthz", "/readyz", "/docs", "/openapi.json"] or path.startswith("/assets"):
             return await call_next(request)
 
         client_ip = get_client_ip(request)

@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: investedge-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GROQ_API_KEY_2=${GROQ_API_KEY_2:-}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      - INVESTEDGE_DB_PATH=/app/data/investedge.db
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
+      - USE_VECTOR_RAG=${USE_VECTOR_RAG:-false}
+    volumes:
+      - backend-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    depends_on:
+      chroma:
+        condition: service_started
+
+  # Optional local Chroma vector database service for Phase 2 RAG
+  chroma:
+    image: chromadb/chroma:0.5.5
+    container_name: investedge-chroma
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ANONYMIZED_TELEMETRY=FALSE
+    restart: unless-stopped
+
+volumes:
+  backend-data:
+    driver: local
+  chroma-data:
+    driver: local
+

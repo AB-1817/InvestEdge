@@ -111,6 +111,37 @@ app.include_router(backtest_router)
 app.include_router(chat_router)
 app.include_router(track_record_router)
 
+# ─── Health & Readiness Endpoints (Cloud Run / Kubernetes / Render) ───────────
+
+@app.get("/health", tags=["Health"])
+@app.get("/healthz", tags=["Health"])
+async def health_check():
+    return {"status": "ok", "service": "investedge-backend", "version": "2.0.0"}
+
+@app.get("/readyz", tags=["Health"])
+async def readiness_check():
+    try:
+        from storage import get_db_connection
+        with get_db_connection() as conn:
+            conn.execute("SELECT 1").fetchone()
+        db_ready = True
+    except Exception as e:
+        logger.warning(f"Readiness check DB warning: {e}")
+        db_ready = False
+
+    return {
+        "status": "ready" if db_ready else "degraded",
+        "database": "ok" if db_ready else "error",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/api/earnings/event-study/{symbol}", tags=["Earnings"])
+async def earnings_event_study_endpoint(symbol: str):
+    try:
+        return get_earnings_event_study(symbol)
+    except Exception as e:
+        raise HTTPException(500, f"Error generating event study for {symbol}: {str(e)}")
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def nse(symbol: str) -> str:
