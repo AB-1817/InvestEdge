@@ -1,7 +1,8 @@
 import pytest
 import os
+import httpx
+from main import app
 from fastapi.testclient import TestClient
-from backend.main import app
 
 client = TestClient(app)
 
@@ -42,3 +43,44 @@ def test_chat_proxy_secret_boundary(monkeypatch):
     # Key must NEVER appear in response body
     assert test_key not in res_str
     assert "TEST_SECRET" not in res_str
+
+
+def test_chat_proxy_success_mocked(monkeypatch):
+    """Verifies that a successful Groq HTTP 200 response is cleanly returned by POST /api/chat."""
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test_mock_key")
+
+    mock_groq_response = {
+        "id": "chatcmpl-mock123",
+        "object": "chat.completion",
+        "choices": [
+            {
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "Hello! I am InvestEdge AI."
+                },
+                "finish_reason": "stop"
+            }
+        ]
+    }
+
+    class MockHttpxResponse:
+        status_code = 200
+        is_success = True
+        headers = {"content-type": "application/json"}
+        def json(self):
+            return mock_groq_response
+
+    async def mock_post(*args, **kwargs):
+        return MockHttpxResponse()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+
+    payload = {
+        "messages": [{"role": "user", "content": "Hello"}]
+    }
+
+    res = client.post("/api/chat", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["choices"][0]["message"]["content"] == "Hello! I am InvestEdge AI."

@@ -414,7 +414,7 @@ export default function ChatUI() {
   const onKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--bg-primary)" }}>
+    <div data-onboarding="market-brain" style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--bg-primary)" }}>
       {/* Header */}
       <header style={{
         background: "var(--bg-surface)",

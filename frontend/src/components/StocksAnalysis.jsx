@@ -109,7 +109,7 @@ export default function StocksAnalysis() {
       </div>
 
       {/* Stock Tabs + Search + Scout */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, flexWrap: "wrap" }}>
+      <div data-onboarding="stocks" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, flexWrap: "wrap" }}>
         <input
           type="text"
           value={searchInput}

@@ -122,9 +122,20 @@ app.include_router(metrics_router)
 
 # ─── Health & Readiness Endpoints (Cloud Run / Kubernetes / Render) ───────────
 
+@app.get("/", tags=["Health"])
+async def root():
+    return {
+        "status": "ok",
+        "app": "InvestEdge Financial Intelligence API",
+        "version": "2.0.0"
+    }
+
 @app.get("/health", tags=["Health"])
-@app.get("/healthz", tags=["Health"])
 async def health_check():
+    return {"status": "ok"}
+
+@app.get("/healthz", tags=["Health"])
+async def healthz_check():
     return {"status": "ok", "service": "investedge-backend", "version": "2.0.0"}
 
 @app.get("/readyz", tags=["Health"])
@@ -1036,6 +1047,13 @@ async def earnings_predictor(symbol: str):
         raise
     except Exception as e:
         raise HTTPException(500, f"Earnings predictor error: {str(e)}")
+
+@app.get("/api/earnings/event-study/{symbol}")
+async def earnings_event_study_endpoint(symbol: str):
+    """Returns point-in-time historical earnings event study data for a given symbol."""
+    ticker = nse(symbol)
+    return get_earnings_event_study(ticker)
+
 
 # ─── 7. Live Market Indices (Nifty 50, Sensex, Bank Nifty) ───────────────────
 

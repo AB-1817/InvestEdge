@@ -92,7 +92,8 @@ async def chat_proxy(req: ChatRequest):
                 break
 
             latency_ms = round((time.perf_counter() - t0) * 1000, 2)
-            if not res or not res.ok:
+            is_ok = getattr(res, "is_success", getattr(res, "ok", False)) if res else False
+            if not is_ok:
                 err_data = res.json() if res and res.headers.get("content-type", "").startswith("application/json") else {}
                 safe_msg = err_data.get("error", {}).get("message", f"Upstream Groq API returned status {res.status_code if res else '503'}")
                 try:

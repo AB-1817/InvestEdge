@@ -151,7 +151,7 @@ export default function SignalTrackRecord() {
 
       {/* Executive Summary Cards */}
       {summary && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
+        <div data-onboarding="signal-track-record" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
           <div style={{ background: c("--bg-elevated"), borderRadius: 14, border: `1px solid ${c("--border")}`, padding: 20 }}>
             <div style={{ fontSize: 11, color: c("--text-muted"), textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Win Rate %</div>
             <div style={{ fontSize: 28, fontWeight: 800, color: summary.win_rate_pct >= 50 ? "#16a34a" : "#d97706" }}>
