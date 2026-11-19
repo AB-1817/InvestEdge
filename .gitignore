@@ -37,3 +37,6 @@ npm-debug.log*
 !.env.example
 *.db
 investedge.db
+backend/data/
+data/
+evals/results/

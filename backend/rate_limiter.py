@@ -17,6 +17,7 @@ RATE_LIMIT_TIERS = {
     "/api/v2/rag/ingest": (5, "very_high_rag_ingest"),
     "/api/v2/rag/query": (30, "medium_rag"),
     "/api/v2/agent/query": (20, "medium_agent"),
+    "/api/v2/metrics": (60, "low"),
     "/api/portfolio/doctor": (15, "medium"),
     "/api/patterns": (30, "medium"),
     "/api/opportunity": (30, "medium"),

@@ -1,4 +1,6 @@
 import os
+import time
+import uuid
 import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -75,15 +77,51 @@ async def chat_proxy(req: ChatRequest):
         "Content-Type": "application/json",
     }
 
+    t0 = time.perf_counter()
+    trace_id = f"trace_{uuid.uuid4().hex[:16]}"
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             res = await client.post(GROQ_API_URL, headers=headers, json=payload)
+            latency_ms = round((time.perf_counter() - t0) * 1000, 2)
             if not res.ok:
                 err_data = res.json() if res.headers.get("content-type", "").startswith("application/json") else {}
                 safe_msg = err_data.get("error", {}).get("message", f"Upstream Groq API returned status {res.status_code}")
+                try:
+                    from observability.metrics import record_llm_call
+                    record_llm_call(
+                        trace_id=trace_id,
+                        provider="groq",
+                        model=req.model,
+                        prompt_tokens=0,
+                        completion_tokens=0,
+                        latency_ms=latency_ms,
+                        status="error",
+                        error_message=safe_msg,
+                        endpoint="/api/chat"
+                    )
+                except Exception:
+                    pass
                 raise HTTPException(status_code=502, detail=f"LLM Service Error: {safe_msg}")
             
-            return res.json()
+            data = res.json()
+            usage = data.get("usage", {})
+            try:
+                from observability.metrics import record_llm_call
+                record_llm_call(
+                    trace_id=trace_id,
+                    provider="groq",
+                    model=req.model,
+                    prompt_tokens=usage.get("prompt_tokens", 0),
+                    completion_tokens=usage.get("completion_tokens", 0),
+                    latency_ms=latency_ms,
+                    status="success",
+                    endpoint="/api/chat"
+                )
+            except Exception:
+                pass
+
+            data["trace_id"] = trace_id
+            return data
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail="LLM Service request timed out.")
     except HTTPException:

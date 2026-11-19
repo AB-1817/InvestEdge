@@ -117,6 +117,9 @@ app.include_router(rag_router)
 from agents_v2.routes import router as agents_v2_router
 app.include_router(agents_v2_router)
 
+from observability.routes import router as metrics_router
+app.include_router(metrics_router)
+
 # ─── Health & Readiness Endpoints (Cloud Run / Kubernetes / Render) ───────────
 
 @app.get("/health", tags=["Health"])
@@ -222,6 +225,8 @@ def set_cached(key: str, data: Any, ttl_seconds: int = 300):
 
 @app.on_event("startup")
 async def warmup_cache():
+    if os.getenv("TESTING", "0") == "1" or os.getenv("PYTEST_CURRENT_TEST"):
+        return
     asyncio.create_task(_warmup_background())
 
 async def _warmup_background():
