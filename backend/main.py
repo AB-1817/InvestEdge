@@ -111,6 +111,9 @@ app.include_router(backtest_router)
 app.include_router(chat_router)
 app.include_router(track_record_router)
 
+from rag.routes import router as rag_router
+app.include_router(rag_router)
+
 # ─── Health & Readiness Endpoints (Cloud Run / Kubernetes / Render) ───────────
 
 @app.get("/health", tags=["Health"])
@@ -223,6 +226,13 @@ async def _warmup_background():
         await asyncio.sleep(1)
         await get_indices_live()
         await fetch_news_feed("", None, 8)
+        if os.getenv("USE_VECTOR_RAG", "false").lower() in ("true", "1", "yes"):
+            try:
+                from rag.ingest import run_full_ingestion
+                await asyncio.to_thread(run_full_ingestion, ["RELIANCE", "HDFCBANK", "TCS"])
+                logger.info("Vector RAG background ingestion warmup completed.")
+            except Exception as ve:
+                logger.warning(f"Vector RAG warmup notice: {ve}")
     except Exception as e:
         logger.warning(f"Warmup notice: {e}")
 
@@ -1152,6 +1162,24 @@ class SynthesisReq(BaseModel):
 
 @app.post("/api/news/synthesize")
 async def synthesize_news(req: SynthesisReq):
+    use_vector = os.getenv("USE_VECTOR_RAG", "false").lower() in ("true", "1", "yes")
+    if use_vector:
+        try:
+            from rag.retriever import Retriever
+            retriever = Retriever()
+            answer, citations = await retriever.answer_with_rag(req.query, symbol=req.symbol, k=4)
+            return {
+                "query": req.query,
+                "symbol": req.symbol,
+                "article_count": len(citations),
+                "summary": answer,
+                "citations": [c.model_dump() for c in citations],
+                "vector_rag_active": True,
+                "generated_at": datetime.now().isoformat(),
+            }
+        except Exception as e:
+            logger.warning(f"Vector RAG synthesis fallback to legacy: {e}")
+
     articles = await fetch_news_feed(req.query, req.symbol, 6)
     titles = [a["title"] for a in articles]
 

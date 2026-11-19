@@ -424,18 +424,32 @@ async def get_stock_explanation(symbol: str) -> Dict[str, Any]:
     news_articles = []
     bull_count = 0
     bear_count = 0
+    rag_citations = []
 
-    if not isinstance(news_res, Exception) and isinstance(news_res, list):
+    use_vector_rag = os.getenv("USE_VECTOR_RAG", "false").lower() in ("true", "1", "yes")
+    if use_vector_rag:
+        try:
+            from rag.retriever import Retriever
+            retriever = Retriever()
+            retrieved_chunks = retriever.retrieve(f"{clean_sym} corporate earnings news growth catalysts", k=5, symbol=clean_sym)
+            if retrieved_chunks:
+                rag_citations = retriever.format_citations(retrieved_chunks)
+                news_articles = [{"title": c.text_snippet[:120], "publisher": c.source} for c in rag_citations]
+        except Exception as ve:
+            pass
+
+    if not news_articles and not isinstance(news_res, Exception) and isinstance(news_res, list):
         news_articles = news_res
-        bull_words = ["beat", "growth", "profit", "surge", "record", "outperform", "upgrade", "deal", "order", "rally"]
-        bear_words = ["miss", "weak", "decline", "loss", "downgrade", "cut", "disappoint", "fall", "drop", "penalty"]
-        for a in news_articles:
-            t = a.get("title", "").lower()
-            if any(w in t for w in bull_words):
-                bull_count += 1
-            if any(w in t for w in bear_words):
-                bear_count += 1
-        news_sentiment = "bullish" if bull_count > bear_count else ("bearish" if bear_count > bull_count else "neutral")
+
+    bull_words = ["beat", "growth", "profit", "surge", "record", "outperform", "upgrade", "deal", "order", "rally"]
+    bear_words = ["miss", "weak", "decline", "loss", "downgrade", "cut", "disappoint", "fall", "drop", "penalty"]
+    for a in news_articles:
+        t = a.get("title", "").lower()
+        if any(w in t for w in bull_words):
+            bull_count += 1
+        if any(w in t for w in bear_words):
+            bear_count += 1
+    news_sentiment = "bullish" if bull_count > bear_count else ("bearish" if bear_count > bull_count else "neutral")
 
     # 4. Parse Market Regime Agent Data
     regime_name = "Sideways Chop"
@@ -576,6 +590,8 @@ async def get_stock_explanation(symbol: str) -> Dict[str, Any]:
             "badge": f"from News Agent ({news_sentiment.upper()})",
             "highlight": f"{bull_count} bullish vs {bear_count} bearish headlines across {len(news_articles)} articles",
             "headlines": [a["title"] for a in news_articles[:4]],
+            "citations": [c.model_dump() for c in rag_citations],
+            "vector_rag_active": use_vector_rag,
         },
         "regime_agent": {
             "agent": "Market Regime Agent",
@@ -651,6 +667,8 @@ async def get_stock_explanation(symbol: str) -> Dict[str, Any]:
             "dominant_direction": "Bullish" if bull_votes > bear_votes else ("Bearish" if bear_votes > bull_votes else "Neutral"),
         },
         "synthesis": ai_synthesis,
+        "citations": [c.model_dump() for c in rag_citations],
+        "vector_rag_active": use_vector_rag,
         "agent_contributions": agent_contributions,
         "risk_factors": risk_factors,
         "actionable_takeaway": actionable_takeaway,

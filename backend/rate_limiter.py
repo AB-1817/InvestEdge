@@ -14,6 +14,8 @@ RATE_LIMIT_TIERS = {
     "/api/backtest/run": (10, "very_high_backtest"),
     "/api/news/synthesize": (10, "very_high"),
     "/api/video/generate": (5, "very_high_video"),
+    "/api/v2/rag/ingest": (5, "very_high_rag_ingest"),
+    "/api/v2/rag/query": (30, "medium_rag"),
     "/api/portfolio/doctor": (15, "medium"),
     "/api/patterns": (30, "medium"),
     "/api/opportunity": (30, "medium"),
