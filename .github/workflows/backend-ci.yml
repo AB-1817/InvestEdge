@@ -75,8 +75,9 @@ jobs:
       - name: Run Pytest
         env:
           GROQ_API_KEY: "mock_test_key"
-          INVESTEDGE_DB_PATH: ":memory:"
+          INVESTEDGE_DB_PATH: "data/ci_investedge.db"
         run: |
+          mkdir -p data
           python -m pytest backend/tests backend/backtesting/tests -v --tb=short
 
   eval-gate:

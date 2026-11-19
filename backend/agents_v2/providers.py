@@ -7,6 +7,7 @@ Allows running the exact same agent code across:
 3. Mock Provider (for deterministic, offline testing)
 """
 import os
+import asyncio
 import json
 import time
 import logging
