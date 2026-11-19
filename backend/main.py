@@ -114,6 +114,9 @@ app.include_router(track_record_router)
 from rag.routes import router as rag_router
 app.include_router(rag_router)
 
+from agents_v2.routes import router as agents_v2_router
+app.include_router(agents_v2_router)
+
 # ─── Health & Readiness Endpoints (Cloud Run / Kubernetes / Render) ───────────
 
 @app.get("/health", tags=["Health"])
